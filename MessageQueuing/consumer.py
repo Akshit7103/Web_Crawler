@@ -1,5 +1,3 @@
-# rabbitmq_consumer.py
-
 import pika
 import json
 from crawler import crawl_website_from_request
