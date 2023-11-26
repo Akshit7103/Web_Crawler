@@ -1,36 +1,33 @@
-This README provides instructions on how to set up and use the message queue for the Web Crawler project using RabbitMQ. This setup is essential for distributing crawl tasks and handling the results.
+Web Crawler Project
+Overview
+This project consists of a web crawler system that utilizes a message queue for processing web crawling requests. It includes a producer script for sending crawl requests, a consumer script for processing these requests, and a MySQL database setup for storing crawl data and keywords.
 
-Prerequisites
-Before you begin, ensure you have the following installed:
-
-Python 3.6 or higher
-RabbitMQ Server
-Python libraries: pika, pymysql, requests, beautifulsoup4
+Files Description
+producer.py: This script sends crawl requests to a message queue. It allows users to input URLs and a crawl depth.
+consumer.py: This script consumes messages from the queue, performs web crawling based on the requests, and stores the results in the database.
+database.py: Contains functions for database operations such as connecting to the MySQL database and inserting words.
+web_crawler.sql: SQL script for setting up the necessary tables in the MySQL database.
+README.md: This file, explaining the setup and usage of the project.
+Database Setup
+Create a MySQL database named web_crawler.
+Use the web_crawler.sql file to create the required tables.
+crawl_requests: Stores the crawl requests with fields for URLs, depth, keywords, and crawl results.
+(Include other tables if any, such as words or good_words based on your setup)
 Installation
-Install RabbitMQ:
-
-Follow the official guide to install RabbitMQ.
-Ensure the RabbitMQ service is running on your system.
-Install Python Dependencies:
-
-Run pip install pika pymysql requests beautifulsoup4 to install the required Python packages.
+Ensure Python 3.x is installed.
+Install necessary packages:
+Copy code
+pip install pymysql pika requests beautifulsoup4
+Set up a RabbitMQ server or use a cloud-based service.
+Usage
+Starting the Producer
+Run producer.py and follow the prompts to input URLs and crawl depth.
+Copy code
+python producer.py
+Starting the Consumer
+Run consumer.py to start processing crawl requests.
+Copy code
+python consumer.py
 Configuration
-RabbitMQ Configuration:
+Update database connection settings in db_utils.py as per your MySQL setup.
 
-The default configuration of RabbitMQ will work for most basic setups.
-For advanced configurations, refer to the RabbitMQ documentation.
-Database Configuration:
-
-Set up your MySQL database according to the schema provided in the web_crawler.sql file.
-Update the database connection details in the Python scripts (host, user, password, db).
-Running the Application
-Start the Producer:
-
-The producer script (producer.py) sends crawl requests to the queue.
-Run the script using python producer.py.
-Modify the script to change the crawl request details as needed.
-Start the Consumer:
-
-The consumer script (consumer.py) listens for messages on the queue and processes the crawl requests.
-Run the script using python consumer.py.
-The consumer will process each message and store the results in the database.
