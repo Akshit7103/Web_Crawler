@@ -4,9 +4,11 @@ from bs4 import BeautifulSoup
 import json
 from urllib.parse import urljoin
 
-def crawl(url, depth, keywords, hits, hit_counts):
-    if depth == 0:
+def crawl(url, depth, keywords, hits, hit_counts, visited_urls):
+    if depth == 0 or url in visited_urls:
         return
+
+    visited_urls.add(url)
 
     try:
         response = requests.get(url)
@@ -25,18 +27,18 @@ def crawl(url, depth, keywords, hits, hit_counts):
             href = link.get('href')
             if href and not href.startswith('#'):
                 absolute_url = urljoin(url, href)
-                crawl(absolute_url, depth - 1, keywords, hits, hit_counts)
+                crawl(absolute_url, depth - 1, keywords, hits, hit_counts, visited_urls)
 
     except requests.RequestException as e:
         print(f"Failed to crawl {url}: {str(e)}")
 
 def on_request(ch, method, properties, body):
     data = json.loads(body)
-    print(" [x] Received crawl request for", data['url'])
-
     hits = []
     hit_counts = {keyword.lower(): 0 for keyword in data['keywords']}
-    crawl(data['url'], data['depth'], data['keywords'], hits, hit_counts)
+    visited_urls = set()
+
+    crawl(data['url'], data['depth'], data['keywords'], hits, hit_counts, visited_urls)
 
     with open('keyword_hits.txt', 'a') as file:
         for hit in hits:
