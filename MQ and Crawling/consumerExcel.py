@@ -15,7 +15,6 @@ def crawl(url, depth, keywords, hits, hit_counts, visited_urls):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Convert page text to lower case for case-insensitive search
         text = soup.get_text().lower()
         for keyword in keywords:
             lower_keyword = keyword.lower()
@@ -25,7 +24,6 @@ def crawl(url, depth, keywords, hits, hit_counts, visited_urls):
                 hits.append({'Keyword': keyword, 'URL': url, 'Count': count})
                 hit_counts[keyword] += count
 
-        # Crawl to the next depth
         for link in soup.find_all('a'):
             href = link.get('href')
             if href and not href.startswith('#'):
@@ -45,7 +43,6 @@ def on_request(ch, method, properties, body):
 
     crawl(data['url'], data['depth'], data['keywords'], hits, hit_counts, visited_urls)
 
-    # Convert hits to a DataFrame and save to Excel
     if hits:
         df = pd.DataFrame(hits)
         df.to_excel('keyword_hits.xlsx', index=False)
@@ -54,14 +51,11 @@ def on_request(ch, method, properties, body):
 
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-# Establish connection with RabbitMQ server
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 
-# Declare the queue as durable
 channel.queue_declare(queue='crawl_requests', durable=True)
 
-# Set up subscription on the queue
 channel.basic_consume(queue='crawl_requests', on_message_callback=on_request)
 
 print(' [*] Waiting for crawl requests. To exit press CTRL+C')
