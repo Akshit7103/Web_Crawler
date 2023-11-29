@@ -1,33 +1,44 @@
-Web Crawler Project
+Web Crawler README
 Overview
-This project consists of a web crawler system that utilizes a message queue for processing web crawling requests. It includes a producer script for sending crawl requests, a consumer script for processing these requests, and a MySQL database setup for storing crawl data and keywords.
+This project consists of two Python scripts: producer.py and consumer.py. The producer.py script sends web crawling requests to a RabbitMQ queue, and the consumer.py script listens to this queue, performs the web crawling as per the requests, and records the hits of specified keywords in a text file.
 
-Files Description
-producer.py: This script sends crawl requests to a message queue. It allows users to input URLs and a crawl depth.
-consumer.py: This script consumes messages from the queue, performs web crawling based on the requests, and stores the results in the database.
-database.py: Contains functions for database operations such as connecting to the MySQL database and inserting words.
-web_crawler.sql: SQL script for setting up the necessary tables in the MySQL database.
-README.md: This file, explaining the setup and usage of the project.
-Database Setup
-Create a MySQL database named web_crawler.
-Use the web_crawler.sql file to create the required tables.
-crawl_requests: Stores the crawl requests with fields for URLs, depth, keywords, and crawl results.
-(Include other tables if any, such as words or good_words based on your setup)
-Installation
-Ensure Python 3.x is installed.
-Install necessary packages:
-Copy code
-pip install pymysql pika requests beautifulsoup4
-Set up a RabbitMQ server or use a cloud-based service.
-Usage
-Starting the Producer
-Run producer.py and follow the prompts to input URLs and crawl depth.
-Copy code
+Requirements
+Python 3.x
+RabbitMQ Server
+Python Libraries: pika, requests, beautifulsoup4
+Setup
+Install RabbitMQ Server: Ensure RabbitMQ is installed and running. RabbitMQ Installation Guide
+
+Install Python Libraries: Run the following command to install the required libraries:
+
+pip install pika requests beautifulsoup4
+
+Clone Repository: Clone or download the repository containing the producer.py and consumer.py scripts.
+
+Running the Scripts
+producer.py
+Sends crawl requests to the RabbitMQ queue.
+Specify the URL to crawl, the depth of crawling, and the keywords to search for.
+Navigate to the directory containing producer.py.
+Run the script using Python:
+
 python producer.py
-Starting the Consumer
-Run consumer.py to start processing crawl requests.
-Copy code
-python consumer.py
-Configuration
-Update database connection settings in db_utils.py as per your MySQL setup.
 
+Follow the prompts to enter the URL, depth, and keywords.
+consumer.py
+Listens for messages from the RabbitMQ queue.
+Processes each message, performs the web crawling, and records keyword hits.
+Navigate to the directory containing consumer.py.
+Run the script using Python:
+
+python consumer.py
+
+The script will continuously listen for crawl requests and process them.
+
+Output:
+The consumer.py script outputs the results to a file named keyword_hits.txt.
+The file contains information about keyword occurrences in the crawled web pages.
+
+Notes
+Ensure that RabbitMQ is running and accessible before running the scripts.
+The scripts should be used in compliance with the terms of service of the websites being crawled.
