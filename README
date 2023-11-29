@@ -1,4 +1,5 @@
-Web Crawler README
+Web Crawler 
+README
 Overview
 This project consists of two Python scripts: producer.py and consumer.py. The producer.py script sends web crawling requests to a RabbitMQ queue, and the consumer.py script listens to this queue, performs the web crawling as per the requests, and records the hits of specified keywords in a text file.
 
