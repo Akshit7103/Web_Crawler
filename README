@@ -1,45 +1,41 @@
-Web Crawler 
-README
-Overview
-This project consists of two Python scripts: producer.py and consumer.py. The producer.py script sends web crawling requests to a RabbitMQ queue, and the consumer.py script listens to this queue, performs the web crawling as per the requests, and records the hits of specified keywords in a text file.
+Web Crawler Using RabbitMQ
+This project demonstrates a web crawling application that uses RabbitMQ for message queuing to distribute crawling tasks across multiple threads. The project consists of two Python scripts: producer.py and consumer.py.
 
 Requirements
 Python 3.x
-RabbitMQ Server
-Python Libraries: pika, requests, beautifulsoup4
+RabbitMQ server
+Libraries specified in requirements.txt
 Setup
-Install RabbitMQ Server: Ensure RabbitMQ is installed and running. RabbitMQ Installation Guide
+Install the required libraries using pip:
 
-Install Python Libraries: Run the following command to install the required libraries:
+pip install -r requirements.txt
+Ensure that RabbitMQ server is running locally or update the connection parameters in both producer.py and consumer.py to connect to your RabbitMQ server.
 
-pip install pika requests beautifulsoup4
-
-Clone Repository: Clone or download the repository containing the producer.py and consumer.py scripts.
-
-Running the Scripts
+Usage
 producer.py
-Sends crawl requests to the RabbitMQ queue.
-Specify the URL to crawl, the depth of crawling, and the keywords to search for.
-Navigate to the directory containing producer.py.
-Run the script using Python:
+The producer.py script is used to send crawl requests to the RabbitMQ server.
+
+Run producer.py:
 
 python producer.py
+Enter the URL to crawl and the depth of the crawl when prompted.
 
-Follow the prompts to enter the URL, depth, and keywords.
+The script will send a crawl request to the RabbitMQ server.
+
 consumer.py
-Listens for messages from the RabbitMQ queue.
-Processes each message, performs the web crawling, and records keyword hits.
-Navigate to the directory containing consumer.py.
-Run the script using Python:
+The consumer.py script listens for crawl requests from the RabbitMQ server and performs the web crawling.
+Run consumer.py:
 
 python consumer.py
+The script will wait for crawl requests.
 
-The script will continuously listen for crawl requests and process them.
+When a crawl request is received, it fetches keywords from a MySQL database and initiates a multi-threaded web crawl.
+Crawl results are saved to an Excel file named keyword_hits.xlsx.
 
-Output:
-The consumer.py script outputs the results to a file named keyword_hits.txt.
-The file contains information about keyword occurrences in the crawled web pages.
+Configuration
+Modify the connection parameters in both producer.py and consumer.py to connect to your RabbitMQ server.
+In consumer.py, update the MySQL database connection details in the get_keywords_from_db() function.
+Customize the behavior of the web crawler and the way crawl results are processed in consumer.py.
 
-Notes
-Ensure that RabbitMQ is running and accessible before running the scripts.
-The scripts should be used in compliance with the terms of service of the websites being crawled.
+Important Notes
+Ensure that RabbitMQ and MySQL servers are running and properly configured before running the scripts.
