@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 import pandas as pd
 import mysql.connector
 import threading
+import uuid  # Import the uuid module
 
 def get_keywords_from_db():
     try:
@@ -60,7 +61,9 @@ def crawl(url, depth, keywords, hits, visited_urls, lock):
 
 def on_request(ch, method, properties, body):
     data = json.loads(body)
-    print(" [x] Received crawl request for", data['url'])
+    crawl_id = str(uuid.uuid4())  # Generate a unique ID for the crawl
+
+    print(f" [x] Received crawl request (ID: {crawl_id}) for", data['url'])
 
     keywords = get_keywords_from_db()
     hits = []
@@ -76,12 +79,13 @@ def on_request(ch, method, properties, body):
             continue
         t.join()
 
-    # Save hits to an Excel file
+    # Save hits to an Excel file with the crawl ID in the name
     if hits:
+        excel_file_name = f'keyword_hits_{crawl_id}.xlsx'
         df = pd.DataFrame(hits)
-        df.to_excel('keyword_hits.xlsx', index=False)
+        df.to_excel(excel_file_name, index=False)
 
-    print("Crawling completed for request:", data['url'])
+    print(f"Crawling completed for request (ID: {crawl_id}):", data['url'])
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 # Establish connection with RabbitMQ server
@@ -94,5 +98,5 @@ channel.queue_declare(queue='crawl_requests', durable=True)
 # Set up subscription on the queue
 channel.basic_consume(queue='crawl_requests', on_message_callback=on_request)
 
-print(' [*] Waiting for crawl requests. To exit press CTRL+C')
+print(' [*] Waiting for crawl requests. To exit, press CTRL+C')
 channel.start_consuming()
