@@ -1,29 +1,45 @@
 import pika
 import json
+import os
+import time
 
-# Establish connection with RabbitMQ server
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-channel = connection.channel()
+def check_consumer_done():
+    return os.path.exists('consumer_done.txt')
 
-# Declare a queue as durable
-channel.queue_declare(queue='crawl_requests', durable=True)
+def clear_consumer_done():
+    if os.path.exists('consumer_done.txt'):
+        os.remove('consumer_done.txt')
 
-# Input details for the crawl
-url = input("Enter URL to crawl: ")
-depth = int(input("Enter depth of crawl: "))
+def send_crawl_request(channel, url, depth):
+    message = json.dumps({'url': url, 'depth': depth})
+    channel.basic_publish(
+        exchange='',
+        routing_key='crawl_requests',
+        body=message,
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # Make message persistent
+        )
+    )
+    print("[x] Sent %r" % message)
 
-# Create a message
-# Keywords are not included as they are fetched from the database in the consumer script
-message = json.dumps({"url": url, "depth": depth})
+def main():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='crawl_requests', durable=True)
 
-# Publish the message
-channel.basic_publish(exchange='',
-                      routing_key='crawl_requests',
-                      body=message,
-                      properties=pika.BasicProperties(
-                         delivery_mode=2,  # make message persistent
-                      ))
-print(" [x] Sent crawl request")
+    while True:
+        clear_consumer_done()
+        url = input("Enter URL to crawl or 'exit' to quit: ")
+        if url.lower() == 'exit':
+            break
+        depth = int(input("Enter depth of crawl: "))
+        send_crawl_request(channel, url, depth)
 
-# Close the connection
-connection.close()
+        print("Waiting for the consumer to finish...")
+        while not check_consumer_done():
+            time.sleep(1)
+
+    connection.close()
+
+if __name__ == "__main__":
+    main()

@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 import pandas as pd
 import mysql.connector
 import threading
-import uuid  # Import the uuid module
+import uuid
 
 def get_keywords_from_db():
     try:
@@ -61,7 +61,7 @@ def crawl(url, depth, keywords, hits, visited_urls, lock):
 
 def on_request(ch, method, properties, body):
     data = json.loads(body)
-    crawl_id = str(uuid.uuid4())  # Generate a unique ID for the crawl
+    crawl_id = str(uuid.uuid4())
 
     print(f" [x] Received crawl request (ID: {crawl_id}) for", data['url'])
 
@@ -72,14 +72,12 @@ def on_request(ch, method, properties, body):
 
     crawl(data['url'], data['depth'], keywords, hits, visited_urls, lock)
 
-    # Wait for all threads to finish
     main_thread = threading.current_thread()
     for t in threading.enumerate():
         if t is main_thread:
             continue
         t.join()
 
-    # Save hits to an Excel file with the crawl ID in the name
     if hits:
         excel_file_name = f'keyword_hits_{crawl_id}.xlsx'
         df = pd.DataFrame(hits)
@@ -88,15 +86,22 @@ def on_request(ch, method, properties, body):
     print(f"Crawling completed for request (ID: {crawl_id}):", data['url'])
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-# Establish connection with RabbitMQ server
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-channel = connection.channel()
+    # Mark completion for this batch
+    mark_consumer_done()
 
-# Declare the queue as durable
-channel.queue_declare(queue='crawl_requests', durable=True)
+def mark_consumer_done():
+    with open('consumer_done.txt', 'w') as f:
+        f.write('done')
 
-# Set up subscription on the queue
-channel.basic_consume(queue='crawl_requests', on_message_callback=on_request)
+def main():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='crawl_requests', durable=True)
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue='crawl_requests', on_message_callback=on_request)
 
-print(' [*] Waiting for crawl requests. To exit, press CTRL+C')
-channel.start_consuming()
+    print(' [*] Waiting for crawl requests. To exit, press CTRL+C')
+    channel.start_consuming()
+
+if __name__ == "__main__":
+    main()
